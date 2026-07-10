@@ -6,7 +6,7 @@ classifiers = [
 {% endfor %}    "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-dependencies    = ["typing-extensions>=4.13.2; python_version < '3.13'"]
+dependencies    = []
 description     = "{{ description }}"
 {% if license != "None" %}license         = "{{ license }}"
 {% endif %}name            = "{{ package_name }}"
@@ -17,7 +17,6 @@ version         = "{{ initial_version }}"
 [project.optional-dependencies]
 dev = [
     "{{ package_name }}[lint,test]",
-    "httpx>=0.28.0",
     "prek>=0.4.5",
 {% if use_tox %}    "tox-uv>=1.13.1",
     "tox>=4.25.0",
@@ -28,7 +27,6 @@ test = [
     "pytest-asyncio>=0.24.0",
     "pytest-cov>=5.0.0",
     "pytest-html>=4.1.1",
-    "pytest-mock>=3.14.0",
     "pytest-xdist>=3.6.1",
     "pytest>=8.0.0",
 ]
