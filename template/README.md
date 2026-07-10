@@ -17,6 +17,9 @@
 {% endif %}{% if use_docs %}- **文档**：Sphinx + ReadTheDocs（中文 zh_CN）
 {% endif %}{% if use_tox %}- **多版本测试**：tox + tox-uv（{{ tox_envlist }}）
 {% endif %}{% if use_docker %}- **容器化**：Dockerfile（含国内镜像源配置）
+{% endif %}{% if project_type == "gui" %}- **GUI 框架**：PySide2（Qt5，LGPL），仅支持 Python 3.6-3.10
+{% elif project_type == "web" %}- **Web 框架**：FastAPI + uvicorn
+{% elif project_type == "cli" %}- **CLI 入口**：argparse + [project.scripts]
 {% endif %}- **项目结构**：src layout + py.typed 类型标记
 
 ## 安装

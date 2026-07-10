@@ -133,6 +133,38 @@ def test_build_parser_no_command_exits(monkeypatch: pytest.MonkeyPatch) -> None:
         parser.parse_args()
 
 
+def test_build_parser_new_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    """new --type gui 解析为 project_type=gui."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--type", "gui"])
+    parser = cli._build_parser()
+    args = parser.parse_args()
+    assert args.project_type == "gui"
+
+
+def test_build_parser_new_type_default_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """new 不带 --type 时 project_type 默认 None."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
+    parser = cli._build_parser()
+    args = parser.parse_args()
+    assert args.project_type is None
+
+
+def test_build_parser_new_invalid_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    """new --type 非法值报错退出."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--type", "invalid"])
+    parser = cli._build_parser()
+    with pytest.raises(SystemExit):
+        parser.parse_args()
+
+
+def test_build_parser_init_type(monkeypatch: pytest.MonkeyPatch) -> None:
+    """init --type web 解析为 project_type=web."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "init", "--type", "web"])
+    parser = cli._build_parser()
+    args = parser.parse_args()
+    assert args.project_type == "web"
+
+
 # --- _is_directory_nonempty ---
 
 
@@ -266,6 +298,38 @@ def test_main_new_called_process_error(monkeypatch: pytest.MonkeyPatch, tmp_path
         cli.main()
 
 
+def test_main_new_with_type(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """new --type gui 时传递 project_type=gui 给 copier."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--type", "gui"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert "project_type=gui" in captured["cmd"]
+
+
+def test_main_new_without_type_no_project_type(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """new 不带 --type 时命令不含 project_type."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert not any("project_type=" in c for c in captured["cmd"])
+
+
 # --- main: init ---
 
 
@@ -361,6 +425,38 @@ def test_main_init_called_process_error(monkeypatch: pytest.MonkeyPatch, tmp_pat
     monkeypatch.setattr(subprocess, "run", fake_run)
     with pytest.raises(SystemExit, match="1"):
         cli.main()
+
+
+def test_main_init_with_type(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """init --type cli 时传递 project_type=cli 给 copier."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "init", "--type", "cli"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert "project_type=cli" in captured["cmd"]
+
+
+def test_main_init_without_type_no_project_type(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """init 不带 --type 时命令不含 project_type."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "init"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert not any("project_type=" in c for c in captured["cmd"])
 
 
 # --- main: update ---

@@ -38,8 +38,22 @@ def _build_parser() -> argparse.ArgumentParser:
 
     new_parser = subparsers.add_parser("new", help="新建项目（建立子文件夹）")
     new_parser.add_argument("project_name", type=str, help="项目名称")
+    new_parser.add_argument(
+        "--type",
+        dest="project_type",
+        choices=["library", "cli", "gui", "web"],
+        default=None,
+        help="项目类型（不指定则交互选择）",
+    )
 
-    subparsers.add_parser("init", help="在当前目录初始化项目")
+    init_parser = subparsers.add_parser("init", help="在当前目录初始化项目")
+    init_parser.add_argument(
+        "--type",
+        dest="project_type",
+        choices=["library", "cli", "gui", "web"],
+        default=None,
+        help="项目类型（不指定则交互选择）",
+    )
 
     update_parser = subparsers.add_parser("update", help="更新当前目录中的已生成项目模板")
     update_parser.add_argument("-A", "--skip-answered", action="store_true", help="跳过所有问题")
@@ -73,12 +87,14 @@ def _run_new(args: argparse.Namespace) -> None:
     dest_dir.mkdir(parents=True, exist_ok=True)
 
     cmd: list[str] = ["uvx", "copier", "copy", "--data", f"project_name={args.project_name}"]
+    if args.project_type:
+        cmd.extend(["--data", f"project_type={args.project_type}"])
     _append_author_data(cmd)
     cmd.extend([_TEMPLATE_REPO, str(dest_dir)])
     subprocess.run(cmd, check=True)
 
 
-def _run_init(_args: argparse.Namespace) -> None:
+def _run_init(args: argparse.Namespace) -> None:
     """在当前目录初始化项目."""
     cwd = Path.cwd()
     if _is_directory_nonempty(cwd):
@@ -89,6 +105,8 @@ def _run_init(_args: argparse.Namespace) -> None:
 
     project_name = cwd.name
     cmd: list[str] = ["uvx", "copier", "copy", "--data", f"project_name={project_name}"]
+    if args.project_type:
+        cmd.extend(["--data", f"project_type={args.project_type}"])
     _append_author_data(cmd)
     cmd.extend([_TEMPLATE_REPO, "."])
     subprocess.run(cmd, check=True)

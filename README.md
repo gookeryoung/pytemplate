@@ -94,6 +94,8 @@ coopie test -A -T     # 跳过所有问题和任务
 | `use_docker` | bool | `true` | Dockerfile |
 | `use_cicd` | bool | `true` | GitHub Actions CI/CD |
 | `use_tox` | bool | `true` | tox 多版本测试 |
+| `use_cli` | bool | `false` | CLI 入口配置（[project.scripts]，project_type=cli 时自动启用） |
+| `project_type` | str | `library` | 项目类型（library/cli/gui/web，决定入口模板与依赖） |
 | `use_domestic_mirrors` | bool | `true` | 国内镜像源 |
 | `coverage_fail_under` | int | `95` | 覆盖率阈值 |
 

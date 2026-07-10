@@ -1,0 +1,19 @@
+"""{{ project_name }} Web 应用（FastAPI）."""
+
+from __future__ import annotations
+
+from fastapi import FastAPI
+
+app = FastAPI(title="{{ project_name }}", description="{{ description }}")
+
+
+@app.get("/")
+def read_root() -> dict[str, str]:
+    """根路径健康检查."""
+    return {"status": "ok", "project": "{{ package_name }}"}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("{{ package_name }}.app:app", host="0.0.0.0", port=8000, reload=True)

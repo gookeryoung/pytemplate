@@ -11,6 +11,7 @@ max_python_version: '3.14'
 min_python_version: '3.8'
 package_name: coopie
 project_name: coopie
+project_type: library
 use_cicd: true
 use_cli: true
 use_docker: false

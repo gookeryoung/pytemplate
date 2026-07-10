@@ -1,0 +1,23 @@
+"""{{ project_name }} GUI 入口（PySide2）."""
+
+from __future__ import annotations
+
+import sys
+
+from PySide2.QtWidgets import QApplication, QLabel
+
+__all__ = ["main"]
+
+
+def main() -> int:  # pragma: no cover
+    """启动 GUI 应用（事件循环阻塞，需图形环境手动测试）."""
+    app = QApplication(sys.argv)
+    label = QLabel("{{ project_name }} 已就绪")
+    label.setWindowTitle("{{ project_name }}")
+    label.resize(400, 200)
+    label.show()
+    return app.exec_()
+
+
+if __name__ == "__main__":
+    sys.exit(main())
