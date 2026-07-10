@@ -4,7 +4,7 @@
 PACKAGE := {{ package_name }}
 COV_THRESHOLD := {{ coverage_fail_under }}
 
-.PHONY: help sync build b clean c test cov lint typecheck check{% if use_docs %} doc{% endif %}{% if use_tox %} tox{% endif %} bump push
+.PHONY: help sync build b clean c test cov lint typecheck check{% if use_docs %} doc{% endif %}{% if use_tox %} tox{% endif %} bump patch minor major push
 
 help: ## 显示帮助信息
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z].*:.*##/ {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -43,9 +43,13 @@ doc: ## 构建 Sphinx 文档
 tox: ## 多版本测试 (tox)
 	uvx tox run
 {% endif %}
-bump: ## 版本号 bump (用法: make bump PART=<patch|minor|major>)
-	@if [ -z "$(PART)" ]; then echo "用法: make bump PART=<patch|minor|major>"; exit 1; fi
-	uvx bump-my-version bump $(PART) --tag
+BUMP_PART := $(filter-out bump,$(MAKECMDGOALS))
+
+bump: ## 版本号 bump (默认 patch，用法: make bump [minor|major])
+	@uvx bump-my-version bump $(if $(BUMP_PART),$(firstword $(BUMP_PART)),patch) --tag
+
+patch minor major:
+	@:
 
 push: ## 推送代码到远程仓库
 	git push && git push --tags
