@@ -32,8 +32,11 @@ test = [
     "pytest-xdist>=3.6.1",
     "pytest>=8.0.0",
 ]
+{% if use_cli %}
+[project.scripts]
+{{ package_name }} = "{{ package_name }}.cli:main"
 
-[build-system]
+{% endif %}[build-system]
 build-backend = "hatchling.build"
 requires      = ["hatchling"]
 
