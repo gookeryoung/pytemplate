@@ -32,7 +32,7 @@ jobs:
         run: uv run ruff format --check src tests
 
       - name: Pyrefly check
-        run: uv run pyrefly check .
+        run: uv run pyrefly check
 
   test:
     name: Test (Python 3.8 & 3.14)
