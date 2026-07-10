@@ -44,6 +44,18 @@ uv run ruff check src tests
 uv run ruff format --check src tests
 ```
 
+### Make 快捷命令
+
+项目提供 Makefile 封装常用操作，运行 `make help` 查看全部命令：
+
+```bash
+make sync     # 安装开发依赖
+make check    # 全套门禁 (lint + typecheck + cov)
+make build    # 构建分发包
+make clean    # 清理构建产物
+make bump PART=patch  # 版本号 bump
+```
+
 {% if use_docs %}
 ## 文档
 

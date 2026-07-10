@@ -142,6 +142,34 @@ def test_main_update(monkeypatch: pytest.MonkeyPatch) -> None:
     assert captured["cmd"] == ["uvx", "copier", "update"]
 
 
+def test_main_update_skip_answered(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--update --skip-answered 在命令中追加 --skip-answered."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "--update", "--skip-answered"])
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert captured["cmd"] == ["uvx", "copier", "update", "--skip-answered"]
+
+
+def test_main_update_skip_tasks(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--update --skip-tasks 在命令中追加 --skip-tasks."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "--update", "--skip-tasks"])
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert captured["cmd"] == ["uvx", "copier", "update", "--skip-tasks"]
+
+
 def test_main_update_called_process_error(monkeypatch: pytest.MonkeyPatch) -> None:
     """copier update 失败时退出."""
     monkeypatch.setattr(sys, "argv", ["coopie", "--update"])

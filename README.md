@@ -83,6 +83,7 @@ my-project/
 ├── .vscode/settings.json        # VS Code 配置
 ├── Dockerfile                   # CI/容器化用（use_docker）
 ├── LICENSE                      # 许可证文件
+├── Makefile                     # 快捷命令（build/test/cov/lint/bump 等）
 ├── README.md                    # 项目 README
 ├── docs/                        # Sphinx 文档（use_docs）
 │   ├── _static/.gitkeep
