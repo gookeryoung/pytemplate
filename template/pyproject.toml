@@ -130,8 +130,9 @@ tag_name = "v{new_version}"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
-search = 'version = "{current_version}"'
-replace = 'version = "{new_version}"'
+regex = true
+search = '(version\s+=\s+)"{current_version}"'
+replace = '\1"{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "src/{{ package_name }}/__init__.py"

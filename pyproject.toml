@@ -18,7 +18,7 @@ license         = "MIT"
 name            = "coopie"
 readme          = "README.md"
 requires-python = ">=3.8"
-version         = "0.1.8"
+version         = "0.1.9"
 
 [project.optional-dependencies]
 dev = [
@@ -136,8 +136,9 @@ tag_name = "v{new_version}"
 
 [[tool.bumpversion.files]]
 filename = "pyproject.toml"
-search = 'version = "{current_version}"'
-replace = 'version = "{new_version}"'
+regex = true
+search = '(version\s+=\s+)"{current_version}"'
+replace = '\1"{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = "src/coopie/__init__.py"
