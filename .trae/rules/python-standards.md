@@ -17,7 +17,7 @@
 ```bash
 uv run ruff check src tests
 uv run ruff format --check src tests
-uv run pyrefly check .
+uv run pyrefly check
 uv run pytest -m "not slow" --cov=coopie --cov-fail-under=95
 ```
 
