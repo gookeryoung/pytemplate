@@ -1,4 +1,4 @@
-# pytemplate
+# coopie
 
 > 基于 [copier](https://copier.readthedocs.io/) 的通用 Python 项目模板。
 
@@ -25,14 +25,14 @@
 
 ```bash
 # 方式一：uvx（推荐，无需预装）
-uvx --with jinja2-time copier copy --trust f:\Dev\pytemplate my-new-project
+uvx --with jinja2-time copier copy --trust f:\Dev\coopie my-new-project
 
 # 方式二：pip
 pip install copier jinja2-time
-copier copy --trust f:\Dev\pytemplate my-new-project
+copier copy --trust f:\Dev\coopie my-new-project
 
 # 从 git 仓库创建（推送到远程后）
-uvx --with jinja2-time copier copy --trust https://github.com/yourname/pytemplate.git my-new-project
+uvx --with jinja2-time copier copy --trust https://github.com/gookeryoung/coopie.git my-new-project
 ```
 
 > `--trust` 是必需的，因为模板使用了 `jinja_extensions` 功能（用于 `{% now %}` 动态获取版权年份）。

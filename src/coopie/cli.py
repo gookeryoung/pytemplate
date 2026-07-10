@@ -24,7 +24,7 @@ def main():
         "copier",
         "copy",
         "--trust",
-        "https://github.com/gookeryoung/pytemplate",
+        "https://github.com/gookeryoung/coopie",
         str(dest_dir),
     ]
     subprocess.run(cmd)

@@ -1,7 +1,7 @@
 [project]
-name = "pytemplate"
+name = "coopie"
 version = "0.1.0"
-description = "Add your description here"
+description = "基于 Copier 的通用 Python 项目模板"
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = []
@@ -25,14 +25,14 @@ build-backend = "hatchling.build"
 requires = ["hatchling"]
 
 [dependency-groups]
-dev = ["pytemplate[dev]"]
+dev = ["coopie[dev]"]
 
 [[tool.uv.index]]
 url = "https://mirrors.aliyun.com/pypi/simple/"
 default = true
 
 [project.scripts]
-pytemplate = "pytemplate.cli:main"
+coopie = "coopie.cli:main"
 
 
 [tool.ruff]
