@@ -90,6 +90,24 @@ def test_get_args_no_args(monkeypatch: pytest.MonkeyPatch) -> None:
     assert args.update is False
 
 
+def test_get_args_version_long(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    """--version 打印版本号并退出（退出码 0）."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "--version"])
+    with pytest.raises(SystemExit) as exc:
+        cli._get_args()
+    assert exc.value.code == 0
+    assert cli.__version__ in capsys.readouterr().out
+
+
+def test_get_args_version_short(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    """-V 打印版本号并退出（退出码 0）."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "-V"])
+    with pytest.raises(SystemExit) as exc:
+        cli._get_args()
+    assert exc.value.code == 0
+    assert cli.__version__ in capsys.readouterr().out
+
+
 # --- main: 互斥与缺参退出 ---
 
 

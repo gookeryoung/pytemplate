@@ -48,6 +48,7 @@ requires      = ["hatchling"]
 
 [tool.uv]
 required-version = ">=0.5.0"
+
 [[tool.uv.index]]
 default = true
 url     = "https://mirrors.aliyun.com/pypi/simple/"

@@ -12,7 +12,7 @@ dependencies    = ["typing-extensions>=4.13.2; python_version < '3.13'"]
 description     = "{{ description }}"
 readme          = "README.md"
 requires-python = ">={{ min_python_version }}"
-version         = "0.1.5"
+version         = "0.1.0"
 
 [project.optional-dependencies]
 dev = [
@@ -33,20 +33,20 @@ test = [
     "pytest-xdist>=3.6.1",
     "pytest>=8.0.0",
 ]
+
 [build-system]
-
-
-{% if use_domestic_mirrors %}
 build-backend = "hatchling.build"
 requires      = ["hatchling"]
+
 [tool.uv]
 required-version = ">=0.5.0"
+
+{% if use_domestic_mirrors %}
 [[tool.uv.index]]
-
-
-{% endif %}
 default = true
 url     = "https://mirrors.aliyun.com/pypi/simple/"
+{% endif %}
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/{{ package_name }}"]
 
@@ -79,6 +79,7 @@ testpaths                          = ["tests"]
 
 # Ruff 配置 - 与 .pre-commit-config.yaml 保持一致
 [tool.ruff]
+extend-exclude = ["template"]
 line-length    = 120
 target-version = "{{ target_py }}"
 
@@ -114,7 +115,7 @@ select = [
 
 [tool.pyrefly]
 preset           = "strict"
-project-excludes = [".venv/**"]
+project-excludes = [".venv/**", "template/**"]
 project-includes = ["**/*.ipynb", "**/*.py*"]
 python-version   = "{{ min_python_version }}"
 search-path      = ["."]

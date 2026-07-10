@@ -5,6 +5,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+from coopie import __version__
+
+_TEMPLATE_REPO = "https://github.com/gookeryoung/coopie"
+
 
 def _get_git_config(key: str) -> str | None:
     """从 git 配置中查询指定键的值，查不到时返回 None."""
@@ -26,10 +30,11 @@ def _get_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Create a new Python project from a template.")
     parser.add_argument("project_name", type=str, nargs="?", help="Name of the new project.")
     parser.add_argument("--update", "-U", action="store_true", help="更新当前目录中已生成的项目模板")
+    parser.add_argument("-V", "--version", action="version", version=f"%(prog)s {__version__}")
     return parser.parse_args()
 
 
-def main():
+def main() -> None:
     """主函数，解析命令行参数并创建或更新项目."""
     args = _get_args()
 
@@ -66,7 +71,7 @@ def main():
         if author_email:
             cmd.extend(["--data", f"author_email={author_email}"])
 
-        cmd.extend(["https://github.com/gookeryoung/coopie", str(dest_dir)])
+        cmd.extend([_TEMPLATE_REPO, str(dest_dir)])
         subprocess.run(cmd, check=True)
     except subprocess.CalledProcessError as exc:
         print(f"\n命令执行失败（退出码 {exc.returncode}），请查看上方 copier 输出的错误信息。", file=sys.stderr)

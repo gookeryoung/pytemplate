@@ -10,7 +10,6 @@ max_python_version: '3.14'
 min_python_version: '3.8'
 package_name: coopie
 project_name: coopie
-pypi_token_secret: PYPI_TOKEN
 use_cicd: true
 use_docker: true
 use_docs: true
