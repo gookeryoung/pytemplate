@@ -8,11 +8,16 @@ permissions:
   contents: write
   id-token: write
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   release:
     name: Build & Publish
     runs-on: ubuntu-latest
     environment: pypi
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
 
@@ -20,6 +25,7 @@ jobs:
         uses: astral-sh/setup-uv@v6
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Build distributions
         run: uv build
@@ -34,5 +40,5 @@ jobs:
         run: |
           gh release create "$TAG_NAME" \
             --title "Release $TAG_NAME" \
-            --notes "Automated release from CI" \
+            --generate-notes \
             dist/*
