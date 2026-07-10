@@ -30,11 +30,21 @@ GitHub Actions 运行时报告 `astral-sh/setup-uv@v6` 使用已弃用的 Node.j
 
 ## 版本说明
 
-用户在本次迭代前手动做了多次版本变更（0.1.14→0.1.15→0.2.0，含 commit message 文案改为中文）。本次 `make bump` 默认 patch：0.2.0→0.2.1，迁移 `_commit` v0.1.14→v0.2.1。
+用户在本次迭代前手动做了多次版本变更（0.1.14→0.1.15→0.2.0，含 commit message 文案改为中文）。
+
+首次尝试用 `@v8` 滚动标签，但 CI 报错 "unable to find version `v8`"——setup-uv 只有完整版本号标签（immutable），无 major 滚动标签。修正为 `@v8.3.2`（最新稳定版）。
+
+- 首次 bump：0.2.0→0.2.1，迁移 `_commit` v0.1.14→v0.2.1（@v8 标签错误）
+- 修正 bump：0.2.1→0.2.2，迁移 `_commit` v0.2.1→v0.2.2（@v8.3.2 完整版本号）
+
+bump 时发现 `.readthedocs.yaml` 被本地工具自动改为 Python 3.13（应保持 `min_python_version` 3.8），`git checkout --` 恢复后 bump 成功。
 
 ## 提交历史
 
 ```
+5525ef9 chore: 迁移 _commit 至 v0.2.2 完成 setup-uv 版本号修复
+bba2675 chore: 更新版本 0.2.1 → 0.2.2  (tag: v0.2.2)
+7110ca7 fix: setup-uv@v8 改为 @v8.3.2 完整版本号标签
 f5e3ee6 chore: 迁移 _commit 至 v0.2.1 完成 setup-uv 升级同步
 0b14fe5 chore: 更新版本 0.2.0 → 0.2.1  (tag: v0.2.1)
 b09ca69 fix: 升级 astral-sh/setup-uv@v6 → @v8 修复 Node.js 20 弃用警告
@@ -42,4 +52,5 @@ b09ca69 fix: 升级 astral-sh/setup-uv@v6 → @v8 修复 Node.js 20 弃用警告
 
 ## 遗留事项
 
-无。`actions/checkout@v5` 和 `actions/setup-python` 未被报告 Node.js 20 警告，暂不升级。如后续出现警告再处理。
+- `actions/checkout@v5` 和 `actions/setup-python` 未被报告 Node.js 20 警告，暂不升级。如后续出现警告再处理。
+- `astral-sh/setup-uv` 无 major 滚动标签（v6/v8），只有完整版本号标签（v8.3.2）。后续升级需指定完整版本号。
