@@ -46,7 +46,7 @@ def main() -> None:
 
     try:
         if args.update:
-            cmd = ["uvx", "--with", "jinja2-time", "copier", "update", "--trust"]
+            cmd = ["uvx", "copier", "update"]
             subprocess.run(cmd, check=True)
             return
 
@@ -55,11 +55,8 @@ def main() -> None:
 
         cmd = [
             "uvx",
-            "--with",
-            "jinja2-time",
             "copier",
             "copy",
-            "--trust",
             "--data",
             f"project_name={args.project_name}",
         ]

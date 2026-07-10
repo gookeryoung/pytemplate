@@ -139,7 +139,7 @@ def test_main_update(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setattr(subprocess, "run", fake_run)
     cli.main()
-    assert captured["cmd"] == ["uvx", "--with", "jinja2-time", "copier", "update", "--trust"]
+    assert captured["cmd"] == ["uvx", "copier", "update"]
 
 
 def test_main_update_called_process_error(monkeypatch: pytest.MonkeyPatch) -> None:

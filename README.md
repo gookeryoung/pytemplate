@@ -21,21 +21,17 @@
 
 ### 创建新项目
 
-模板使用 `jinja2-time` 扩展获取当前年份，需随 copier 一起安装。
-
 ```bash
 # 方式一：uvx（推荐，无需预装）
-uvx --with jinja2-time copier copy --trust f:\Dev\coopie my-new-project
+uvx copier copy f:\Dev\coopie my-new-project
 
 # 方式二：pip
-pip install copier jinja2-time
-copier copy --trust f:\Dev\coopie my-new-project
+pip install copier
+copier copy f:\Dev\coopie my-new-project
 
 # 从 git 仓库创建（推送到远程后）
-uvx --with jinja2-time copier copy --trust https://github.com/gookeryoung/coopie.git my-new-project
+uvx copier copy https://github.com/gookeryoung/coopie.git my-new-project
 ```
-
-> `--trust` 是必需的，因为模板使用了 `jinja_extensions` 功能（用于 `{% now %}` 动态获取版权年份）。
 
 ### 更新已有项目
 
@@ -43,7 +39,7 @@ uvx --with jinja2-time copier copy --trust https://github.com/gookeryoung/coopie
 
 ```bash
 cd my-new-project
-uvx --with jinja2-time copier update --trust
+uvx copier update
 ```
 
 Copier 会读取 `.copier-answers.yml` 中的上一次答案，对比模板差异，增量合并更新。
