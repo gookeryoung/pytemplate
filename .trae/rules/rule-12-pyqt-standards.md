@@ -45,6 +45,7 @@ uv run pytest -m "not slow" --gui  # 若启用 GUI 测试标记
 ```python
 from PySide2.QtCore import Signal
 
+
 class MainWindow(QMainWindow):
     value_changed = Signal(int)  # 类属性，不是实例属性
 ```
