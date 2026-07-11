@@ -68,13 +68,13 @@ omit        = ["tests/*"]
 source      = ["coopie"]
 
 [tool.coverage.report]
+fail_under = 95
 exclude_lines = [
     "if TYPE_CHECKING:",
     "if __name__ == .__main__.:",
     "pragma: no cover",
     "raise NotImplementedError",
 ]
-fail_under = 95
 show_missing = true
 
 [tool.pytest.ini_options]
