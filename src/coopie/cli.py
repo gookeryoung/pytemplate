@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import subprocess
 import sys
 import typing
@@ -8,7 +9,9 @@ from pathlib import Path
 
 from coopie import __version__
 
-_TEMPLATE_REPO = "https://github.com/gookeryoung/coopie"
+_DEFAULT_TEMPLATE_REPO = "https://github.com/gookeryoung/coopie"
+_TEMPLATE_ENV_VAR = "COOPIE_TEMPLATE_REPO"
+_COPIER_TIMEOUT = 600  # 秒，copier copy/update 超时阈值
 
 
 def _get_git_config(key: str) -> str | None:
@@ -26,6 +29,16 @@ def _get_git_config(key: str) -> str | None:
     return value or None
 
 
+def _resolve_template_repo(cli_value: str | None) -> str:
+    """解析模板源：--template 优先，其次环境变量，最后默认 GitHub 仓库."""
+    if cli_value:
+        return cli_value
+    env_value = os.environ.get(_TEMPLATE_ENV_VAR)
+    if env_value:
+        return env_value
+    return _DEFAULT_TEMPLATE_REPO
+
+
 def _build_parser() -> argparse.ArgumentParser:
     """构建 CLI 参数解析器，返回 argparse.ArgumentParser 对象."""
     parser = argparse.ArgumentParser(
@@ -36,6 +49,8 @@ def _build_parser() -> argparse.ArgumentParser:
 
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    template_help = f"模板源（URL 或本地路径）；不指定则读环境变量 {_TEMPLATE_ENV_VAR}，再退回默认仓库"
+
     new_parser = subparsers.add_parser("new", help="新建项目（建立子文件夹）")
     new_parser.add_argument("project_name", type=str, help="项目名称")
     new_parser.add_argument(
@@ -45,6 +60,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="项目类型（不指定则交互选择）",
     )
+    new_parser.add_argument("--template", dest="template", default=None, help=template_help)
 
     init_parser = subparsers.add_parser("init", help="在当前目录初始化项目")
     init_parser.add_argument(
@@ -54,6 +70,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=None,
         help="项目类型（不指定则交互选择）",
     )
+    init_parser.add_argument("--template", dest="template", default=None, help=template_help)
 
     update_parser = subparsers.add_parser("update", help="更新当前目录中的已生成项目模板")
     update_parser.add_argument("-A", "--skip-answered", action="store_true", help="跳过所有问题")
@@ -81,17 +98,36 @@ def _is_directory_nonempty(path: Path) -> bool:
     return any(entry.name != ".git" for entry in path.iterdir())
 
 
+def _run_copier(cmd: list[str]) -> None:
+    """执行 copier 子命令，静默 uv 的 INFO 级日志并加超时保护.
+
+    覆盖 RUST_LOG=warning 避免父进程的 RUST_LOG=info 让 uv 输出大量 PubGrub 解析日志。
+    超时（由 _COPIER_TIMEOUT 控制）后提示用户检查网络或用 --template 指定本地/镜像源。
+    """
+    env = {**os.environ, "RUST_LOG": "warning"}
+    try:
+        subprocess.run(cmd, check=True, timeout=_COPIER_TIMEOUT, env=env)
+    except subprocess.TimeoutExpired:
+        print(
+            f"\n命令执行超时（{_COPIER_TIMEOUT} 秒），可能是网络问题导致拉取模板仓库缓慢。\n"
+            f"可通过 --template 指定本地路径或镜像源，或设置环境变量 {_TEMPLATE_ENV_VAR}=<url>。",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
 def _run_new(args: argparse.Namespace) -> None:
     """新建项目到子目录."""
     dest_dir = Path.cwd() / args.project_name.replace("-", "_")
     dest_dir.mkdir(parents=True, exist_ok=True)
 
+    template_repo = _resolve_template_repo(args.template)
     cmd: list[str] = ["uvx", "copier", "copy", "--data", f"project_name={args.project_name}"]
     if args.project_type:
         cmd.extend(["--data", f"project_type={args.project_type}"])
     _append_author_data(cmd)
-    cmd.extend([_TEMPLATE_REPO, str(dest_dir)])
-    subprocess.run(cmd, check=True)
+    cmd.extend([template_repo, str(dest_dir)])
+    _run_copier(cmd)
 
 
 def _run_init(args: argparse.Namespace) -> None:
@@ -104,12 +140,13 @@ def _run_init(args: argparse.Namespace) -> None:
             return
 
     project_name = cwd.name
+    template_repo = _resolve_template_repo(args.template)
     cmd: list[str] = ["uvx", "copier", "copy", "--data", f"project_name={project_name}"]
     if args.project_type:
         cmd.extend(["--data", f"project_type={args.project_type}"])
     _append_author_data(cmd)
-    cmd.extend([_TEMPLATE_REPO, "."])
-    subprocess.run(cmd, check=True)
+    cmd.extend([template_repo, "."])
+    _run_copier(cmd)
 
 
 def _run_update(args: argparse.Namespace) -> None:
@@ -119,7 +156,7 @@ def _run_update(args: argparse.Namespace) -> None:
         cmd.append("--skip-answered")
     if args.skip_tasks:
         cmd.append("--skip-tasks")
-    subprocess.run(cmd, check=True)
+    _run_copier(cmd)
 
 
 def _run_test(args: argparse.Namespace) -> None:
@@ -129,7 +166,7 @@ def _run_test(args: argparse.Namespace) -> None:
         cmd.append("--skip-answered")
     if args.skip_tasks:
         cmd.append("--skip-tasks")
-    subprocess.run(cmd, check=True)
+    _run_copier(cmd)
 
 
 _COMMAND_DISPATCH: dict[str, typing.Callable[[argparse.Namespace], None]] = {

@@ -63,6 +63,13 @@ coopie 既是模板又是 CLI 工具，封装了 ``copier copy/update``，自动
    # 或直接调用 copier
    uvx copier copy https://github.com/gookeryoung/coopie.git my-new-project
 
+``new``/``init`` 支持 ``--template <url|path>`` 指定模板源（URL 或本地路径），也可通过环境变量
+``COOPIE_TEMPLATE_REPO`` 覆盖默认 GitHub 仓库。国内网络访问 GitHub 缓慢时，可指定镜像或本地副本::
+
+   coopie new my-project --template https://ghproxy.com/https://github.com/gookeryoung/coopie
+   # 或
+   COOPIE_TEMPLATE_REPO=/path/to/local-coopie coopie new my-project
+
 在当前目录初始化项目（project_name 从目录名派生）::
 
    cd existing-dir

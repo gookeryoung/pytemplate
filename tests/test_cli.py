@@ -6,6 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any
 
 import pytest
 
@@ -559,3 +560,183 @@ def test_main_test_skip_tasks(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(subprocess, "run", fake_run)
     cli.main()
     assert captured["cmd"] == ["uvx", "copier", "update", "--pretend", "--skip-tasks"]
+
+
+# --- _resolve_template_repo ---
+
+
+def test_resolve_template_repo_cli_value(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--template 选项优先于环境变量和默认值."""
+    monkeypatch.setenv("COOPIE_TEMPLATE_REPO", "https://env.example/repo")
+    assert cli._resolve_template_repo("https://cli.example/repo") == "https://cli.example/repo"
+
+
+def test_resolve_template_repo_env_var(monkeypatch: pytest.MonkeyPatch) -> None:
+    """无 --template 时用环境变量."""
+    monkeypatch.setenv("COOPIE_TEMPLATE_REPO", "https://env.example/repo")
+    assert cli._resolve_template_repo(None) == "https://env.example/repo"
+
+
+def test_resolve_template_repo_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    """无 --template 且无环境变量时用默认 GitHub 仓库."""
+    monkeypatch.delenv("COOPIE_TEMPLATE_REPO", raising=False)
+    assert cli._resolve_template_repo(None) == "https://github.com/gookeryoung/coopie"
+
+
+def test_resolve_template_repo_cli_overrides_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """--template 覆盖环境变量."""
+    monkeypatch.setenv("COOPIE_TEMPLATE_REPO", "https://env.example/repo")
+    assert cli._resolve_template_repo("/local/path") == "/local/path"
+
+
+def test_resolve_template_repo_empty_env_ignored(monkeypatch: pytest.MonkeyPatch) -> None:
+    """环境变量为空字符串时退回默认."""
+    monkeypatch.setenv("COOPIE_TEMPLATE_REPO", "")
+    assert cli._resolve_template_repo(None) == "https://github.com/gookeryoung/coopie"
+
+
+# --- _build_parser: --template ---
+
+
+def test_build_parser_new_template(monkeypatch: pytest.MonkeyPatch) -> None:
+    """new --template 解析为 template 字段."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--template", "/local/path"])
+    parser = cli._build_parser()
+    args = parser.parse_args()
+    assert args.template == "/local/path"
+
+
+def test_build_parser_new_template_default_none(monkeypatch: pytest.MonkeyPatch) -> None:
+    """new 不带 --template 时 template 默认 None."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
+    parser = cli._build_parser()
+    args = parser.parse_args()
+    assert args.template is None
+
+
+def test_build_parser_init_template(monkeypatch: pytest.MonkeyPatch) -> None:
+    """init --template 解析."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "init", "--template", "/local/path"])
+    parser = cli._build_parser()
+    args = parser.parse_args()
+    assert args.template == "/local/path"
+
+
+# --- _run_copier: timeout / env ---
+
+
+def test_run_copier_timeout(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    """copier 超时时 sys.exit(1) 并打印提示."""
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        raise subprocess.TimeoutExpired(cmd, 600)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    with pytest.raises(SystemExit, match="1"):
+        cli._run_copier(["uvx", "copier", "update"])
+    err = capsys.readouterr().err
+    assert "超时" in err
+    assert "COOPIE_TEMPLATE_REPO" in err
+
+
+def test_run_copier_passes_timeout_and_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_run_copier 传递 timeout 和 env（含 RUST_LOG=warning）给 subprocess.run."""
+    captured: dict[str, Any] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["kwargs"] = kwargs
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli._run_copier(["uvx", "copier", "update"])
+    kwargs: dict[str, Any] = captured["kwargs"]
+    assert kwargs["timeout"] == cli._COPIER_TIMEOUT
+    assert kwargs["check"] is True
+    assert kwargs["env"]["RUST_LOG"] == "warning"
+
+
+def test_run_copier_preserves_other_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """_run_copier 的 env 保留父进程其他环境变量."""
+    monkeypatch.setenv("MY_CUSTOM_VAR", "custom_value")
+    captured: dict[str, dict[str, str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        env = kwargs["env"]
+        assert isinstance(env, dict)
+        captured["env"] = env
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli._run_copier(["uvx", "copier", "update"])
+    assert captured["env"]["MY_CUSTOM_VAR"] == "custom_value"
+    assert captured["env"]["RUST_LOG"] == "warning"
+
+
+# --- main: new/init with --template ---
+
+
+def test_main_new_with_template(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """new --template 传递给 copier 命令."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--template", "/local/template"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert "/local/template" in captured["cmd"]
+
+
+def test_main_new_template_env_var(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """new 无 --template 但有 COOPIE_TEMPLATE_REPO 时用环境变量."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setenv("COOPIE_TEMPLATE_REPO", "https://mirror.example/repo")
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert "https://mirror.example/repo" in captured["cmd"]
+    assert not any("github.com/gookeryoung/coopie" in c for c in captured["cmd"])
+
+
+def test_main_new_template_default(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """new 无 --template 无环境变量时用默认仓库."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("COOPIE_TEMPLATE_REPO", raising=False)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert "https://github.com/gookeryoung/coopie" in captured["cmd"]
+
+
+def test_main_init_with_template(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """init --template 传递给 copier 命令."""
+    monkeypatch.setattr(sys, "argv", ["coopie", "init", "--template", "/local/template"])
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(cli, "_get_git_config", lambda _: None)
+    captured: dict[str, list[str]] = {}
+
+    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
+        captured["cmd"] = cmd
+        return SimpleNamespace(returncode=0)
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    cli.main()
+    assert "/local/template" in captured["cmd"]

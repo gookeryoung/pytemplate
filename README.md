@@ -40,6 +40,14 @@ coopie test           # dry-run 检查是否产生冲突
 | `coopie test [-A] [-T]` | 模拟检查更新冲突（dry-run） |
 | `coopie -V` | 显示版本号 |
 
+`new`/`init` 支持 `--template <url|path>` 指定模板源（URL 或本地路径），也可通过环境变量 `COOPIE_TEMPLATE_REPO` 覆盖默认 GitHub 仓库。国内网络访问 GitHub 缓慢时，可指定镜像或本地副本：
+
+```bash
+coopie new my-project --template https://ghproxy.com/https://github.com/gookeryoung/coopie
+# 或
+COOPIE_TEMPLATE_REPO=/path/to/local-coopie coopie new my-project
+```
+
 ## 可配置选项
 
 | 选项 | 类型 | 默认值 | 说明 |
