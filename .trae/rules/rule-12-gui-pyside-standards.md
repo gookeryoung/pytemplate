@@ -1,8 +1,149 @@
 # PySide2/PySide6 (Qt5/Qt6) GUI 开发规范
 
-适用于 `project_type=gui` 的生成项目。在 `rule-11-python-standards.md` 基础上补充 Qt 桌面应用特有的约束。
+适用于 `project_type=gui` 的生成项目。在 `rule-11-python-standards.md` 基础上补充 Qt 桌面应用的设计规范与技术约束。
 
 模板按 Python 版本自动区分绑定：`PySide2`（Python ≤ 3.10）/ `PySide6`（Python ≥ 3.11），代码须双兼容。
+
+## 设计系统（Design Tokens）
+
+基于桌面 GUI 工作流设计稿，定义以下设计令牌。所有 QSS 与代码须引用令牌常量，禁止散落硬编码颜色/尺寸。
+
+### 色彩系统
+
+| 令牌 | 色值 | 用途 |
+|------|------|------|
+| `COLOR_PRIMARY` | `#0887A0` | 主色：头部条、侧边栏背景、主操作按钮、选中态 |
+| `COLOR_PRIMARY_DARK` | `#00829E` | 主色按下态、分割线 |
+| `COLOR_ACCENT` | `#87C6BB` | 强调色：成功状态、辅助高亮 |
+| `COLOR_TEXT_ON_PRIMARY` | `#FFFFFF` | 主色背景上的文字/图标 |
+| `COLOR_TEXT_PRIMARY` | `#2C3E50` | 主文字（深色，用于白底内容区） |
+| `COLOR_TEXT_SECONDARY` | `#518394` | 次级文字、说明、禁用态 |
+| `COLOR_BG_APP` | `#FFFFFF` | 应用底色、内容区背景 |
+| `COLOR_BG_MUTED` | `#E5EDE0` | 浅底：卡片间隙、分组背景 |
+| `COLOR_BORDER` | `#D1DDE2` | 边框、分割线 |
+| `COLOR_DANGER` | `#E74C3C` | 错误/危险操作 |
+| `COLOR_WARNING` | `#F39C12` | 警告 |
+| `COLOR_SUCCESS` | `#27AE60` | 成功 |
+
+色彩令牌集中定义在 `src/{{ package_name }}/theme.py` 作为模块常量，QSS 文件通过字符串模板引用。
+
+### 排版
+
+| 令牌 | 字号 | 字重 | 用途 |
+|------|------|------|------|
+| `FONT_TITLE` | 18px | Bold | 窗口标题、页面标题 |
+| `FONT_HEADING` | 15px | Bold | 区块标题、分组标题 |
+| `FONT_BODY` | 13px | Regular | 正文、表单标签 |
+| `FONT_CAPTION` | 11px | Regular | 说明文字、状态栏、表头 |
+
+字体族：`"PingFang SC", "Microsoft YaHei", "Segoe UI", "Helvetica Neue", Arial, sans-serif`（macOS/Windows/Linux 顺序回退）。
+
+### 间距尺度
+
+8px 基准网格，所有间距须为 8 的倍数：
+
+| 令牌 | 值 | 用途 |
+|------|-----|------|
+| `SPACING_XS` | 4px | 图标与文字间隙 |
+| `SPACING_SM` | 8px | 控件内边距、紧凑间隙 |
+| `SPACING_MD` | 16px | 控件间间隙、表单字段间距 |
+| `SPACING_LG` | 24px | 区块内边距 |
+| `SPACING_XL` | 32px | 区块间间隙 |
+
+### 圆角与尺寸
+
+| 令牌 | 值 | 用途 |
+|------|-----|------|
+| `RADIUS_SM` | 4px | 按钮、输入框 |
+| `RADIUS_MD` | 6px | 卡片、面板 |
+| `CONTROL_HEIGHT` | 32px | 按钮/输入框标准高度 |
+| `CONTROL_HEIGHT_SM` | 26px | 紧凑控件 |
+| `SIDEBAR_WIDTH` | 220px | 侧边栏宽度 |
+| `HEADER_HEIGHT` | 40px | 头部条高度 |
+| `TOOLBAR_HEIGHT` | 44px | 工具栏高度 |
+| `STATUSBAR_HEIGHT` | 28px | 状态栏高度 |
+
+## 布局规范
+
+### 主窗口结构
+
+采用「头部 + 侧边栏 + 内容区 + 状态栏」四区结构：
+
+```
+┌──────────────────────────────────────────────────────────┐
+│ HeaderBar  (COLOR_PRIMARY, 高 HEADER_HEIGHT)             │
+├──────────────────────────────────────────────────────────┤
+│            │                                             │
+│  Sidebar   │           Content Area                      │
+│ (COLOR_    │  (COLOR_BG_APP, 可滚动)                     │
+│  PRIMARY,  │                                             │
+│  宽 SIDEBAR│                                             │
+│  _WIDTH)   │                                             │
+│            │                                             │
+├────────────┴─────────────────────────────────────────────┤
+│ StatusBar  (COLOR_BG_MUTED, 高 STATUSBAR_HEIGHT)         │
+└──────────────────────────────────────────────────────────┘
+```
+
+实现用 `QVBoxLayout`（外层）嵌套 `QHBoxLayout`（中区），**禁用绝对定位** `setGeometry`。
+
+### 布局实现要点
+
+- 外层 `QVBoxLayout` 顺序：header → (sidebar+content 的 `QHBoxLayout`) → statusbar
+- 中区 `QHBoxLayout` 中 sidebar 与 content 之间用 `QSplitter` 实现可拖拽分隔（用户体验更好）
+- Content 区用 `QStackedWidget` 配合侧边栏切换页面
+- 侧边栏可折叠（`QSplitter` 设置 `setSizes([0, width])` 或动画展开）
+- 所有 Layout 的 `setContentsMargins(SPACING_MD, SPACING_MD, SPACING_MD, SPACING_MD)`
+
+### 响应式策略
+
+- 窗口最小尺寸 `800×600`，默认 `1280×800`
+- 宽度 < 1000px 时侧边栏自动折叠为图标条（宽度 → 56px）
+- 用 `QSplitter` 而非固定比例，让用户可调整各区大小
+- 内容区内的卡片用 `QGridLayout` 自适应列数（`resizeEvent` 中重算列数）
+
+## 导航模式
+
+### Header 区设计要点
+
+- Header 区分为左右两侧，中间用 Spacer 分隔
+- Header 左侧为 Tab 切换功能，按照项目业务流程从左至右布局，切换过程中下方 Sidebar 和 Content 也一并变化
+- Header 右侧为软件通用功能按钮，包括 `设置`, `帮助`, `关于`等，点击后进入独立的对话框进行操作
+
+### 侧边栏导航（首选）
+
+侧边栏为一级导航，`QListWidget` 或自定义 `QWidget` 实现：
+
+- 背景 `COLOR_PRIMARY`，文字 `COLOR_TEXT_ON_PRIMARY`
+- 每项高度 40px，图标 20×20px + 文字 `FONT_BODY`
+- 选中态：背景 `COLOR_PRIMARY_DARK` + 左侧 3px `COLOR_ACCENT` 竖条
+- Hover 态：背景透明度 10% 白色叠加
+- 点击触发 `currentRowChanged` → `QStackedWidget.setCurrentIndex`
+
+```python
+sidebar = QListWidget()
+sidebar.setObjectName("sidebar")
+for icon, text in NAV_ITEMS:
+    item = QListWidgetItem(QIcon(icon), text)
+    sidebar.addItem(item)
+sidebar.currentRowChanged.connect(stack.setCurrentIndex)
+```
+
+### 选项卡导航（次级）
+
+内容区内多视图切换用 `QTabWidget`：
+
+- Tab 高度 36px，文字 `FONT_BODY`
+- 选中 Tab 底部 2px `COLOR_PRIMARY` 下划线
+- Tab 内容区边框 `COLOR_BORDER`，圆角 `RADIUS_MD`
+
+### 面包屑（路径导航）
+
+层级深时用 `QLabel` + `>` 分隔符实现面包屑：
+
+- 文字 `FONT_CAPTION`，颜色 `COLOR_TEXT_SECONDARY`
+- 当前页用 `COLOR_TEXT_PRIMARY` + Bold
+- 点击上级触发 `navigation_requested` 信号
 
 ## 工具链
 
@@ -11,17 +152,8 @@
 | PySide2 | `>=5.15.2.1`，Qt5 官方绑定（LGPL），仅支持 Python 3.6-3.10 |
 | PySide6 | `>=6.5.0`，Qt6 官方绑定（LGPL），支持 Python 3.8+，3.11+ 环境必选 |
 | pytest-qt | `>=4.2.0`，Qt 测试框架（qapp/qtbot fixture），同时兼容两代绑定 |
-| PyInstaller | `>=6.0`，打包为可执行文件 |
 | pyside2-rcc / pyside6-rcc | 资源编译器（.qrc → _rc.py），按已安装绑定使用 |
 | pyside2-uic / pyside6-uic | UI 编译器（.ui → .py），按已安装绑定使用 |
-
-验证（每次修改后）：
-
-```bash
-uv run ruff check src tests
-uv run pytest -m "not slow" --cov=<package_name> --cov-fail-under=95
-uv run pytest -m "not slow" --gui  # 若启用 GUI 测试标记
-```
 
 ## 兼容性（关键约束）
 
@@ -77,7 +209,7 @@ return run()
 
 ## 模块与入口
 
-- 入口 `src/<package>/main.py`：`QApplication(sys.argv)` → 构建主窗口 → 事件循环（见上兼容写法）。
+- 入口 `src/{{ package_name }}/main.py`：`QApplication(sys.argv)` → 构建主窗口 → 事件循环（见上兼容写法）。
 - `main()` 加 `# pragma: no cover`（事件循环阻塞，难自动化），拆出 `create_main_window()` 等可测函数。
 - 业务逻辑放纯 Python 模块（不 import PySide），便于单测；GUI 层只做信号槽连接与状态展示。
 - 惰性导入重型部件（QWebEngineView 等）以加快启动。
@@ -112,8 +244,8 @@ class MainWindow(QMainWindow):
 - `.qrc` 文件管理图标/样式表/翻译等静态资源，编译为 `_rc.py`：
 
 ```bash
-pyside2-rcc resources.qrc -o src/<package>/resources_rc.py  # PySide2
-pyside6-rcc resources.qrc -o src/<package>/resources_rc.py  # PySide6
+pyside2-rcc resources.qrc -o src/{{ package_name }}/resources_rc.py  # PySide2
+pyside6-rcc resources.qrc -o src/{{ package_name }}/resources_rc.py  # PySide6
 ```
 
 - 引用资源用 `:/` 前缀：`QIcon(":/icons/app.png")`，路径前缀在 `.qrc` 的 `<qresource prefix="/">` 定义。
@@ -154,7 +286,58 @@ class Worker(QObject):
 
 ## 样式（QSS）
 
-- 样式表用 `.qss` 文件管理，`app.setStyleSheet(Path("style.qss").read_text())` 加载，**避免硬编码**。
+### 设计令牌引用
+
+QSS 不支持变量，用 Python 字符串模板渲染。`theme.py` 定义令牌，`style.qss` 用占位符，加载时替换：
+
+```python
+# theme.py
+COLOR_PRIMARY = "#0887A0"
+COLOR_TEXT_ON_PRIMARY = "#FFFFFF"
+# ...其他令牌
+
+QSS_TOKENS = {
+    "COLOR_PRIMARY": COLOR_PRIMARY,
+    "COLOR_TEXT_ON_PRIMARY": COLOR_TEXT_ON_PRIMARY,
+    # ...
+}
+```
+
+```css
+/* style.qss */
+QListWidget#sidebar {
+    background-color: ${COLOR_PRIMARY};
+    color: ${COLOR_TEXT_ON_PRIMARY};
+    border: none;
+    font-size: 13px;
+}
+QListWidget#sidebar::item {
+    padding: 8px 16px;
+    border-left: 3px solid transparent;
+}
+QListWidget#sidebar::item:selected {
+    background-color: ${COLOR_PRIMARY_DARK};
+    border-left: 3px solid ${COLOR_ACCENT};
+}
+```
+
+```python
+# main.py 加载 QSS
+from pathlib import Path
+from string import Template
+from {{ package_name }} import theme
+
+def load_stylesheet() -> str:
+    """加载 QSS 并替换设计令牌占位符."""
+    qss = Path(__file__).parent / "style.qss"
+    return Template(qss.read_text("utf-8")).substitute(theme.QSS_TOKENS)
+
+app.setStyleSheet(load_stylesheet())
+```
+
+### 样式组织要点
+
+- 样式表用 `.qss` 文件管理，**避免硬编码**内联样式。
 - 选择器粒度到部件类型 + objectName：`QPushButton#okButton { ... }`，不用全局限定（易误伤）。
 - 主题切换通过替换 `.qss` 文件重新加载，不在代码中分支样式。
 - 平台差异：macOS 默认风格与 QSS 冲突时用 `app.setStyle("Fusion")` 统一。
@@ -175,7 +358,7 @@ class Worker(QObject):
 pyinstaller --noconsole --onefile --icon=assets/app.ico \
   --hidden-import=PySide2.QtWidgets \
   --add-data "assets;assets" \
-  src/<package>/main.py
+  src/{{ package_name }}/main.py
 ```
 
 - PySide6 项目把 `--hidden-import=PySide2.QtWidgets` 换成 `--hidden-import=PySide6.QtWidgets`。

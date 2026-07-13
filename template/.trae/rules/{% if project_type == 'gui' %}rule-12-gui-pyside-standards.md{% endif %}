@@ -67,14 +67,12 @@
 
 ### 主窗口结构
 
-采用「头部 + 工具栏 + 侧边栏 + 内容区 + 状态栏」五区结构：
+采用「头部 + 侧边栏 + 内容区 + 状态栏」四区结构：
 
 ```
 ┌──────────────────────────────────────────────────────────┐
 │ HeaderBar  (COLOR_PRIMARY, 高 HEADER_HEIGHT)             │
 ├──────────────────────────────────────────────────────────┤
-│ ToolBar    (COLOR_BG_APP, 高 TOOLBAR_HEIGHT, 带下边框)   │
-├────────────┬─────────────────────────────────────────────┤
 │            │                                             │
 │  Sidebar   │           Content Area                      │
 │ (COLOR_    │  (COLOR_BG_APP, 可滚动)                     │
@@ -91,7 +89,7 @@
 
 ### 布局实现要点
 
-- 外层 `QVBoxLayout` 顺序：header → toolbar → (sidebar+content 的 `QHBoxLayout`) → statusbar
+- 外层 `QVBoxLayout` 顺序：header → (sidebar+content 的 `QHBoxLayout`) → statusbar
 - 中区 `QHBoxLayout` 中 sidebar 与 content 之间用 `QSplitter` 实现可拖拽分隔（用户体验更好）
 - Content 区用 `QStackedWidget` 配合侧边栏切换页面
 - 侧边栏可折叠（`QSplitter` 设置 `setSizes([0, width])` 或动画展开）
@@ -105,6 +103,12 @@
 - 内容区内的卡片用 `QGridLayout` 自适应列数（`resizeEvent` 中重算列数）
 
 ## 导航模式
+
+### Header 区设计要点
+
+- Header 区分为左右两侧，中间用 Spacer 分隔
+- Header 左侧为 Tab 切换功能，按照项目业务流程从左至右布局，切换过程中下方 Sidebar 和 Content 也一并变化
+- Header 右侧为软件通用功能按钮，包括 `设置`, `帮助`, `关于`等，点击后进入独立的对话框进行操作
 
 ### 侧边栏导航（首选）
 
@@ -148,17 +152,8 @@ sidebar.currentRowChanged.connect(stack.setCurrentIndex)
 | PySide2 | `>=5.15.2.1`，Qt5 官方绑定（LGPL），仅支持 Python 3.6-3.10 |
 | PySide6 | `>=6.5.0`，Qt6 官方绑定（LGPL），支持 Python 3.8+，3.11+ 环境必选 |
 | pytest-qt | `>=4.2.0`，Qt 测试框架（qapp/qtbot fixture），同时兼容两代绑定 |
-| PyInstaller | `>=6.0`，打包为可执行文件 |
 | pyside2-rcc / pyside6-rcc | 资源编译器（.qrc → _rc.py），按已安装绑定使用 |
 | pyside2-uic / pyside6-uic | UI 编译器（.ui → .py），按已安装绑定使用 |
-
-验证（每次修改后）：
-
-```bash
-uv run ruff check src tests
-uv run pytest -m "not slow" --cov={{ package_name }} --cov-fail-under={{ coverage_fail_under }}
-uv run pytest -m "not slow" --gui  # 若启用 GUI 测试标记
-```
 
 ## 兼容性（关键约束）
 
