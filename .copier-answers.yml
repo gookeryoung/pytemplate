@@ -1,10 +1,10 @@
 # Changes here will be overwritten by Copier
-_commit: v0.7.12
+_commit: v0.8.0
 _src_path: https://gitee.com/gooker_young/coopie.git
 author_email: gooker_young@qq.com
 author_name: gookeryoung
 coverage_fail_under: 95
-description: 基于 [copier](https://copier.readthedocs.io/) 的通用 Python 项目模板。
+description: 基于 copier 的通用 Python 项目模板，通过 copier copy 一键生成开箱即用的工程骨架。
 initial_version: 0.1.8
 license: MIT
 max_python_version: '3.14'
@@ -13,9 +13,7 @@ package_name: coopie
 project_name: coopie
 project_type: library
 use_cicd: true
-use_cli: true
 use_docker: false
 use_docs: true
 use_domestic_mirrors: true
 use_tox: true
-

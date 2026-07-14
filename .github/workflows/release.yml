@@ -6,7 +6,6 @@ on:
 
 permissions:
   contents: write
-  id-token: write
 
 concurrency:
   group: release-${{ github.ref }}
@@ -14,24 +13,11 @@ concurrency:
 
 jobs:
   release:
-    name: Build & Publish
+    name: Create GitHub Release
     runs-on: ubuntu-latest
-    environment: pypi
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v8.3.2
-        with:
-          enable-cache: true
-          cache-dependency-glob: "uv.lock"
-
-      - name: Build distributions
-        run: uv build
-
-      - name: Publish to PyPI (OIDC)
-        run: uv publish
 
       - name: Create GitHub Release
         env:
@@ -40,5 +26,4 @@ jobs:
         run: |
           gh release create "$TAG_NAME" \
             --title "Release $TAG_NAME" \
-            --generate-notes \
-            dist/*
+            --generate-notes

@@ -158,14 +158,9 @@ use_tox:
   help: 是否包含 tox 多版本测试配置
   default: true
 
-use_cli:
-  type: bool
-  help: 是否包含 CLI 入口（[project.scripts]）；project_type=cli 时自动启用
-  default: false
-
 project_type:
   type: str
-  help: 项目类型（决定入口模板与依赖；gui 按 Python 版本用 PySide2≤3.10 / PySide6≥3.11，web 用 FastAPI）
+  help: 项目类型（决定入口模板与依赖；cli 启用 [project.scripts]，gui 按 Python 版本用 PySide2≤3.10 / PySide6≥3.11，web 用 FastAPI）
   default: "library"
   choices:
     "library 纯库": "library"

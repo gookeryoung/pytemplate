@@ -33,7 +33,7 @@ test = [
     "pytest-xdist>=3.6.1",
     "pytest>=8.0.0",
 ]
-{% if use_cli or project_type == "cli" %}
+{% if project_type == "cli" %}
 [project.scripts]
 {{ package_name }} = "{{ package_name }}.cli:main"
 

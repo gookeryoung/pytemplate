@@ -28,22 +28,50 @@ jobs:
         run: uv sync --frozen --extra lint
 
       - name: Ruff check
-        run: uv run ruff check src tests
+        run: uv run ruff check docs
 
       - name: Ruff format check
-        run: uv run ruff format --check src tests
+        run: uv run ruff format --check docs
 
       - name: Pyrefly check
         run: uv run pyrefly check
 
-  test:
-    name: Test (Python 3.8 & 3.14)
+  render:
+    name: Render Template
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.14"]
+        project-type: [library, cli, gui, web]
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install copier
+        run: uvx copier --version
+
+      - name: Render template
+        run: |
+          mkdir -p .preview
+          uvx copier copy --trust --defaults --vcs-ref HEAD . .preview/out --data project_type=${{ matrix.project-type }}
+
+      - name: Verify rendered structure
+        run: |
+          test -f .preview/out/pyproject.toml
+          test -f .preview/out/README.md
+          test -d .preview/out/src
+          test -d .preview/out/tests
+          test -f .preview/out/.copier-answers.yml
+
+      - name: Verify Python syntax (rendered pyproject.toml)
+        run: |
+          python -c "import tomllib; tomllib.loads(open('.preview/out/pyproject.toml').read())" || \
+          python -c "import tomli; tomli.loads(open('.preview/out/pyproject.toml').read())"
+
+  docs:
+    name: Build Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v5
 
@@ -53,11 +81,8 @@ jobs:
           enable-cache: true
           cache-dependency-glob: "uv.lock"
 
-      - name: Set up Python ${{ matrix.python-version }}
-        run: uv python install ${{ matrix.python-version }}
-
       - name: Sync dependencies
-        run: uv sync --frozen --extra test --python ${{ matrix.python-version }}
+        run: uv sync --frozen --extra docs
 
-      - name: Run tests
-        run: uv run pytest -m "not slow" --cov=coopie --cov-fail-under=95 --cov-report=term-missing
+      - name: Build Sphinx docs
+        run: uv run sphinx-build -b html docs docs/_build/html
