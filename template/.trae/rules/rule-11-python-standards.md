@@ -1,5 +1,5 @@
 ---
-alwaysApply: true
+name: "rule-11-python-standards"
 glob: "*.{py,pyi}"
 ---
 
