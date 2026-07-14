@@ -103,8 +103,16 @@ def _run_copier(cmd: list[str]) -> None:
 
     覆盖 RUST_LOG=warning 避免父进程的 RUST_LOG=info 让 uv 输出大量 PubGrub 解析日志。
     超时（由 _COPIER_TIMEOUT 控制）后提示用户检查网络或用 --template 指定本地/镜像源。
+    设置 core.quotePath=false 避免 git 转义非 ASCII 文件名，导致 copier 在 Windows 上
+    因路径编码错误（WinError 123）无法更新含中文文件名的模板文件。
     """
-    env = {**os.environ, "RUST_LOG": "warning"}
+    env = {
+        **os.environ,
+        "RUST_LOG": "warning",
+        "GIT_CONFIG_COUNT": "1",
+        "GIT_CONFIG_KEY_0": "core.quotePath",
+        "GIT_CONFIG_VALUE_0": "false",
+    }
     try:
         subprocess.run(cmd, check=True, timeout=_COPIER_TIMEOUT, env=env)
     except subprocess.TimeoutExpired:

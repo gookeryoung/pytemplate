@@ -640,7 +640,7 @@ def test_run_copier_timeout(monkeypatch: pytest.MonkeyPatch, capsys: pytest.Capt
 
 
 def test_run_copier_passes_timeout_and_env(monkeypatch: pytest.MonkeyPatch) -> None:
-    """_run_copier 传递 timeout 和 env（含 RUST_LOG=warning）给 subprocess.run."""
+    """_run_copier 传递 timeout 和 env（含 RUST_LOG=warning、core.quotePath=false）给 subprocess.run."""
     captured: dict[str, Any] = {}
 
     def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
@@ -653,6 +653,9 @@ def test_run_copier_passes_timeout_and_env(monkeypatch: pytest.MonkeyPatch) -> N
     assert kwargs["timeout"] == cli._COPIER_TIMEOUT
     assert kwargs["check"] is True
     assert kwargs["env"]["RUST_LOG"] == "warning"
+    assert kwargs["env"]["GIT_CONFIG_COUNT"] == "1"
+    assert kwargs["env"]["GIT_CONFIG_KEY_0"] == "core.quotePath"
+    assert kwargs["env"]["GIT_CONFIG_VALUE_0"] == "false"
 
 
 def test_run_copier_preserves_other_env(monkeypatch: pytest.MonkeyPatch) -> None:
