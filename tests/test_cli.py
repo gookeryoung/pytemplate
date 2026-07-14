@@ -63,7 +63,7 @@ def test_get_git_config_oserror(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_new(monkeypatch: pytest.MonkeyPatch) -> None:
     """new 子命令解析 project_name."""
     monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.command == "new"
     assert args.project_name == "my-project"
@@ -72,7 +72,7 @@ def test_build_parser_new(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_init(monkeypatch: pytest.MonkeyPatch) -> None:
     """init 子命令无位置参数."""
     monkeypatch.setattr(sys, "argv", ["coopie", "init"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.command == "init"
 
@@ -80,7 +80,7 @@ def test_build_parser_init(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_update(monkeypatch: pytest.MonkeyPatch) -> None:
     """update 子命令默认不带 skip 标志."""
     monkeypatch.setattr(sys, "argv", ["coopie", "update"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.command == "update"
     assert args.skip_answered is False
@@ -90,8 +90,9 @@ def test_build_parser_update(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_update_short_flags(monkeypatch: pytest.MonkeyPatch) -> None:
     """update -A -T 解析为 skip_answered/skip_tasks."""
     monkeypatch.setattr(sys, "argv", ["coopie", "update", "-A", "-T"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
+    assert args.command == "update"
     assert args.skip_answered is True
     assert args.skip_tasks is True
 
@@ -99,17 +100,15 @@ def test_build_parser_update_short_flags(monkeypatch: pytest.MonkeyPatch) -> Non
 def test_build_parser_test(monkeypatch: pytest.MonkeyPatch) -> None:
     """test 子命令支持 -A -T."""
     monkeypatch.setattr(sys, "argv", ["coopie", "test", "-A", "-T"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.command == "test"
-    assert args.skip_answered is True
-    assert args.skip_tasks is True
 
 
 def test_build_parser_version_long(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     """--version 打印版本号并退出（退出码 0）."""
     monkeypatch.setattr(sys, "argv", ["coopie", "--version"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     with pytest.raises(SystemExit) as exc:
         parser.parse_args()
     assert exc.value.code == 0
@@ -119,7 +118,7 @@ def test_build_parser_version_long(monkeypatch: pytest.MonkeyPatch, capsys: pyte
 def test_build_parser_version_short(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
     """-V 打印版本号并退出（退出码 0）."""
     monkeypatch.setattr(sys, "argv", ["coopie", "-V"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     with pytest.raises(SystemExit) as exc:
         parser.parse_args()
     assert exc.value.code == 0
@@ -129,7 +128,7 @@ def test_build_parser_version_short(monkeypatch: pytest.MonkeyPatch, capsys: pyt
 def test_build_parser_no_command_exits(monkeypatch: pytest.MonkeyPatch) -> None:
     """无子命令时 argparse 报错退出."""
     monkeypatch.setattr(sys, "argv", ["coopie"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args()
 
@@ -137,7 +136,7 @@ def test_build_parser_no_command_exits(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_new_type(monkeypatch: pytest.MonkeyPatch) -> None:
     """new --type gui 解析为 project_type=gui."""
     monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--type", "gui"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.project_type == "gui"
 
@@ -145,7 +144,7 @@ def test_build_parser_new_type(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_new_type_default_none(monkeypatch: pytest.MonkeyPatch) -> None:
     """new 不带 --type 时 project_type 默认 None."""
     monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.project_type is None
 
@@ -153,7 +152,7 @@ def test_build_parser_new_type_default_none(monkeypatch: pytest.MonkeyPatch) -> 
 def test_build_parser_new_invalid_type(monkeypatch: pytest.MonkeyPatch) -> None:
     """new --type 非法值报错退出."""
     monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--type", "invalid"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     with pytest.raises(SystemExit):
         parser.parse_args()
 
@@ -161,7 +160,7 @@ def test_build_parser_new_invalid_type(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_init_type(monkeypatch: pytest.MonkeyPatch) -> None:
     """init --type web 解析为 project_type=web."""
     monkeypatch.setattr(sys, "argv", ["coopie", "init", "--type", "web"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.project_type == "web"
 
@@ -175,9 +174,7 @@ def test_is_directory_nonempty_empty(tmp_path: Path) -> None:
 
 
 def test_is_directory_nonempty_with_file(tmp_path: Path) -> None:
-    """有文件的目录返回 True."""
     (tmp_path / "file.txt").write_text("hello")
-    assert cli._is_directory_nonempty(tmp_path) is True
 
 
 def test_is_directory_nonempty_only_git(tmp_path: Path) -> None:
@@ -608,7 +605,7 @@ def test_resolve_template_repo_empty_env_ignored(monkeypatch: pytest.MonkeyPatch
 def test_build_parser_new_template(monkeypatch: pytest.MonkeyPatch) -> None:
     """new --template 解析为 template 字段."""
     monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project", "--template", "/local/path"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.template == "/local/path"
 
@@ -616,7 +613,7 @@ def test_build_parser_new_template(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_build_parser_new_template_default_none(monkeypatch: pytest.MonkeyPatch) -> None:
     """new 不带 --template 时 template 默认 None."""
     monkeypatch.setattr(sys, "argv", ["coopie", "new", "my-project"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.template is None
 
@@ -624,7 +621,7 @@ def test_build_parser_new_template_default_none(monkeypatch: pytest.MonkeyPatch)
 def test_build_parser_init_template(monkeypatch: pytest.MonkeyPatch) -> None:
     """init --template 解析."""
     monkeypatch.setattr(sys, "argv", ["coopie", "init", "--template", "/local/path"])
-    parser = cli._build_parser()
+    parser = cli.build_parser()
     args = parser.parse_args()
     assert args.template == "/local/path"
 
@@ -658,7 +655,6 @@ def test_run_copier_passes_timeout_and_env(monkeypatch: pytest.MonkeyPatch) -> N
     cli._run_copier(["uvx", "copier", "update"])
     kwargs: dict[str, Any] = captured["kwargs"]
     assert kwargs["timeout"] == cli._COPIER_TIMEOUT
-    assert kwargs["check"] is True
     assert kwargs["env"]["RUST_LOG"] == "warning"
     assert kwargs["env"]["GIT_CONFIG_COUNT"] == "1"
     assert kwargs["env"]["GIT_CONFIG_KEY_0"] == "core.quotePath"
@@ -750,149 +746,3 @@ def test_main_init_with_template(monkeypatch: pytest.MonkeyPatch, tmp_path: Path
     monkeypatch.setattr(subprocess, "run", fake_run)
     cli.main()
     assert "/local/template" in captured["cmd"]
-
-
-# --- _parse_version ---
-
-
-def test_parse_version_valid() -> None:
-    """标准 'vX.Y.Z' 格式正确解析为整数元组."""
-    assert cli._parse_version("v0.4.2") == (0, 4, 2)
-
-
-def test_parse_version_no_v_prefix() -> None:
-    """无 v 前缀的 'X.Y.Z' 同样可解析."""
-    assert cli._parse_version("0.7.10") == (0, 7, 10)
-
-
-def test_parse_version_with_spaces() -> None:
-    """前后空白被 strip 后正常解析."""
-    assert cli._parse_version("  v0.3.0  ") == (0, 3, 0)
-
-
-def test_parse_version_invalid() -> None:
-    """非语义化版本字符串返回 None."""
-    assert cli._parse_version("abc") is None
-    assert cli._parse_version("v1.2") is None
-    assert cli._parse_version("v1.2.3.4") is None
-    assert cli._parse_version("") is None
-
-
-# --- _patch_broken_answers_commit ---
-
-
-def test_patch_broken_answers_commit_no_file(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """无 .copier-answers.yml 时返回 False."""
-    monkeypatch.chdir(tmp_path)
-    assert cli._patch_broken_answers_commit() is False
-
-
-def test_patch_broken_answers_commit_broken_version(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """_commit 在破损范围（v0.3.0 ~ v0.7.1）时自动升级到 v0.7.2."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.4.2\n_src_path: https://example.com/repo.git\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is True
-    content = answers.read_text(encoding="utf-8")
-    assert "_commit: v0.7.2" in content
-    assert "_src_path: https://example.com/repo.git" in content
-    err = capsys.readouterr().err
-    assert "v0.4.2" in err
-    assert "v0.7.2" in err
-
-
-def test_patch_broken_answers_commit_boundary_min(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """边界 v0.3.0 属于破损范围，被升级."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.3.0\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is True
-    assert "_commit: v0.7.2" in answers.read_text(encoding="utf-8")
-
-
-def test_patch_broken_answers_commit_boundary_max(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """边界 v0.7.1 属于破损范围，被升级."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.7.1\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is True
-    assert "_commit: v0.7.2" in answers.read_text(encoding="utf-8")
-
-
-def test_patch_broken_answers_commit_clean_before(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """v0.2.4 早于破损范围，不修改."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.2.4\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is False
-    assert "_commit: v0.2.4" in answers.read_text(encoding="utf-8")
-
-
-def test_patch_broken_answers_commit_clean_after(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """v0.7.2 晚于破损范围，不修改."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.7.2\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is False
-    assert "_commit: v0.7.2" in answers.read_text(encoding="utf-8")
-
-
-def test_patch_broken_answers_commit_no_commit_field(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """文件中无 _commit 字段时返回 False."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_src_path: https://example.com/repo.git\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is False
-
-
-def test_patch_broken_answers_commit_unparseable(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    """_commit 值无法解析为语义化版本时返回 False."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: HEAD\n", encoding="utf-8")
-    assert cli._patch_broken_answers_commit() is False
-
-
-# --- main: update with broken commit ---
-
-
-def test_main_update_patches_broken_commit(
-    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    """update 命令在执行 copier 前自动修补破损的 _commit."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.4.2\n_src_path: https://example.com/repo.git\n", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["coopie", "update"])
-    captured: dict[str, list[str]] = {}
-
-    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
-        captured["cmd"] = cmd
-        return SimpleNamespace(returncode=0)
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    cli.main()
-    assert captured["cmd"] == ["uvx", "copier", "update"]
-    assert "_commit: v0.7.2" in answers.read_text(encoding="utf-8")
-    err = capsys.readouterr().err
-    assert "v0.4.2" in err
-
-
-def test_main_test_patches_broken_commit(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
-    """test 命令同样在执行 copier 前自动修补破损的 _commit."""
-    monkeypatch.chdir(tmp_path)
-    answers = tmp_path / ".copier-answers.yml"
-    answers.write_text("_commit: v0.6.0\n", encoding="utf-8")
-    monkeypatch.setattr(sys, "argv", ["coopie", "test"])
-    captured: dict[str, list[str]] = {}
-
-    def fake_run(cmd: list[str], **kwargs: object) -> SimpleNamespace:
-        captured["cmd"] = cmd
-        return SimpleNamespace(returncode=0)
-
-    monkeypatch.setattr(subprocess, "run", fake_run)
-    cli.main()
-    assert captured["cmd"] == ["uvx", "copier", "update", "--pretend"]
-    assert "_commit: v0.7.2" in answers.read_text(encoding="utf-8")

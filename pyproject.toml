@@ -45,12 +45,12 @@ coopie = "coopie.cli:main"
 build-backend = "hatchling.build"
 requires      = ["hatchling"]
 
-[tool.uv]
-required-version = ">=0.5.0"
-
 [[tool.uv.index]]
 default = true
 url     = "https://mirrors.aliyun.com/pypi/simple/"
+
+[tool.uv]
+required-version = ">=0.5.0"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/coopie"]
