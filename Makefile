@@ -1,7 +1,7 @@
-# Makefile - coopie 模板仓库快捷命令
+# Makefile - coopie 快捷命令
 # 运行 `make help` 查看所有可用命令
 
-.PHONY: help sync build b clean c lint typecheck check doc render bump patch minor major push
+.PHONY: help sync build b clean c lint typecheck check test cov doc render bump patch minor major push
 
 help: ## 显示帮助信息
 	@awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z].*:.*##/ {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -9,8 +9,8 @@ help: ## 显示帮助信息
 sync: ## 安装开发依赖
 	uv sync --extra dev
 
-build b: ## 提示：本仓库为 copier 模板，无 Python 包可构建
-	@echo "本仓库为 copier 模板，无 Python 包可构建。运行 'make doc' 构建文档，或 'make render' 验证模板渲染。"
+build b: ## 构建 Python 包
+	uv build
 
 clean c: ## 清理构建产物与缓存
 	rm -rf build/ dist/ wheels/ *.egg-info htmlcov/ .coverage .coverage.* coverage.xml docs/_build/ .tox/ .preview/
@@ -18,14 +18,21 @@ clean c: ## 清理构建产物与缓存
 	find docs -type d -name __pycache__ -exec rm -rf {} +
 	find docs -type f -name "*.py[oc]" -delete
 
-lint: ## 代码风格检查 (ruff，仅校验 docs/conf.py)
-	uv run ruff check docs
-	uv run ruff format --check docs
+lint: ## 代码风格检查 (ruff)
+	uv run ruff check
+	uv run ruff format --check
 
 typecheck: ## 类型检查 (pyrefly)
 	uv run pyrefly check
 
 check: lint typecheck ## 运行全套门禁 (lint + typecheck)
+
+test: ## 运行测试
+	uv run pytest
+
+cov: ## 运行测试并生成 HTML 覆盖率报告
+	uv run pytest --cov --cov-report=html
+	@echo "覆盖率报告：htmlcov/index.html"
 
 doc: ## 构建 Sphinx 文档
 	uv run sphinx-build -b html docs docs/_build/html

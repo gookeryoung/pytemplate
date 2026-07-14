@@ -4,15 +4,42 @@
 前置要求
 --------
 
-- Python ≥ 3.8
+- Python ≥ 3.9
 - uv_ ≥ 0.5（推荐）
-- copier_ ≥ 9（通过 ``uvx copier`` 免安装调用）
 
 .. _uv: https://docs.astral.sh/uv/
-.. _copier: https://copier.readthedocs.io/
 
-创建新项目
-----------
+使用 coopie CLI（推荐）
+-----------------------
+
+coopie 提供 ``coopie`` CLI 封装 copier 命令，安装后自动包含 copier 依赖：
+
+.. code-block:: bash
+
+   # 免安装调用（uvx 自动下载 coopie 与 copier）
+   uvx coopie init my-project
+
+   # 或 pip 安装后使用
+   pip install coopie
+   coopie init my-project
+
+``coopie init`` 默认使用 Gitee 国内源，可用 ``--url`` 切换：
+
+.. code-block:: bash
+
+   # 使用 GitHub 源
+   coopie init my-project --url https://github.com/gookeryoung/coopie.git
+
+   # 指定模板版本
+   coopie init my-project --vcs-ref v0.8.0
+
+   # 使用默认参数跳过交互（CI/脚本化场景）
+   coopie init my-project --defaults
+
+使用 copier 原生命令（备选）
+-----------------------------
+
+.. _copier: https://copier.readthedocs.io/
 
 在希望生成项目的父目录中执行：
 
@@ -51,9 +78,13 @@
 
 .. code-block:: bash
 
+   # 使用 coopie CLI（推荐）
+   coopie update
+
+   # 或使用 copier 原生命令
    uvx copier update --trust --with jinja2-time
 
-copier 会比对当前模板版本与 ``.copier-answers.yml`` 中记录的版本，交互式应用差异更新。如遇冲突，copier 会标记并询问保留哪一侧。
+``coopie update`` 调用 ``copier recopy``，基于 ``.copier-answers.yml`` 中记录的答案重新渲染模板。copier 原生 ``update`` 命令则比对当前模板版本与记录版本，交互式应用差异更新。
 
 项目类型说明
 ------------
@@ -72,15 +103,18 @@ copier 会比对当前模板版本与 ``.copier-answers.yml`` 中记录的版本
 
 .. code-block:: bash
 
-   # 安装开发依赖（lint + docs 工具链）
+   # 安装开发依赖（lint + test + docs 工具链）
    uv sync --extra dev
 
-   # 校验 docs/conf.py 等非模板 Python 文件
-   uv run ruff check docs
-   uv run ruff format --check docs
+   # 校验代码
+   uv run ruff check
+   uv run ruff format --check
 
    # 类型检查
    uv run pyrefly check
+
+   # 运行测试
+   uv run pytest
 
    # 本地构建文档
    make doc

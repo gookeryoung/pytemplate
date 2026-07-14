@@ -2,7 +2,6 @@
 authors = [{ name = "gooker_young", email = "gooker_young@qq.com" }]
 classifiers = [
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -12,20 +11,33 @@ classifiers = [
     "Topic :: Software Development :: Code Generators",
 ]
 
-description     = "基于 copier 的通用 Python 项目模板，通过 `copier copy` 一键生成开箱即用的工程骨架。"
+dependencies    = [
+    "copier>=9.0.0",
+    "jinja2-time>=0.2.0",
+    "typer>=0.12.0",
+]
+description     = "基于 copier 的通用 Python 项目模板，通过 coopie CLI 或 copier copy 一键生成开箱即用的工程骨架。"
 license         = "MIT"
 name            = "coopie"
 readme          = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 version         = "0.8.0"
+
+[project.scripts]
+coopie = "coopie.cli:main"
 
 [project.optional-dependencies]
 dev = [
-    "coopie[lint,docs]",
+    "coopie[lint,docs,test]",
     "prek>=0.4.5",
 ]
 docs = ["myst-parser>=3.0", "sphinx-rtd-theme>=2.0", "sphinx>=7.0"]
 lint = ["pyrefly>=1.1.1", "ruff>=0.8.0"]
+test = ["pytest-cov>=5.0.0", "pytest>=8.0.0"]
+
+[build-system]
+build-backend = "hatchling.build"
+requires      = ["hatchling"]
 
 [[tool.uv.index]]
 default = true
@@ -37,11 +49,35 @@ required-version = ">=0.5.0"
 [dependency-groups]
 dev = ["coopie[dev]"]
 
-# Ruff 配置 - 用于校验 docs/conf.py 与 template 中 Jinja 模板的 Python 语法
+[tool.hatch.build.targets.wheel]
+packages = ["src/coopie"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"src/coopie/py.typed" = "coopie/py.typed"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.coverage.run]
+branch = true
+omit   = ["tests/*"]
+source = ["coopie"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "pragma: no cover",
+    "raise NotImplementedError",
+]
+fail_under = 95
+show_missing = true
+
+# Ruff 配置 - 用于校验 src/、tests/、docs/conf.py
 [tool.ruff]
 extend-exclude = ["template", ".venv"]
 line-length    = 120
-target-version = "py38"
+target-version = "py39"
 
 [tool.ruff.lint]
 ignore = [
@@ -70,11 +106,15 @@ select = [
     "W",   # pycodestyle warnings
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["ARG001", "ARG002"]
+"src/coopie/cli.py" = ["UP045"]  # Typer 在 Python 3.9 运行时需 get_type_hints()，不支持 X | None
+
 [tool.pyrefly]
 preset           = "strict"
 project-excludes = [".venv/**", "template/**", "docs/_build/**"]
 project-includes = ["**/*.ipynb", "**/*.py*"]
-python-version   = "3.8"
+python-version   = "3.9"
 search-path      = ["."]
 
 # bump-my-version 配置 - 用于管理模板版本号（copier 通过 git tag 识别模板版本）
@@ -91,6 +131,11 @@ filename = "pyproject.toml"
 regex = true
 search = '(version\s+=\s+)"{current_version}"'
 replace = '\1"{new_version}"'
+
+[[tool.bumpversion.files]]
+filename = "src/coopie/__init__.py"
+search = '__version__ = "{current_version}"'
+replace = '__version__ = "{new_version}"'
 
 [[tool.bumpversion.files]]
 filename = ".copier-answers.yml"
