@@ -73,7 +73,6 @@ uvx copier copy --trust https://github.com/gookeryoung/coopie.git my-project
 | `package_name` | str | 由 `project_name` 派生 | Python 包名（小写+下划线） |
 | `description` | str | `A Python project.` | 项目简短描述 |
 | `author_name` / `author_email` | str | 空 | 作者信息 |
-| `initial_version` | str | `0.1.0` | 初始版本号 |
 | `min_python_version` / `max_python_version` | str | `3.8` / `3.14` | Python 版本范围 |
 | `license` | str | `MIT` | 许可证（MIT/Apache-2.0/GPL-3.0/None） |
 | `project_type` | str | `library` | 项目类型（library/cli/gui/web） |

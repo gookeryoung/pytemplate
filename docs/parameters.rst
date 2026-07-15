@@ -31,11 +31,6 @@
 
    作者邮箱，用于 pyproject.toml。
 
-``initial_version``
-   类型：str，默认：``0.1.0``
-
-   初始版本号。创建项目后由 bump-my-version 管理，此值不应再变。
-
 Python 版本配置
 ----------------
 
