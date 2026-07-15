@@ -15,13 +15,13 @@ classifiers = [
 dependencies    = [
     "copier>=9.0.0",
     "jinja2-time>=0.2.0",
-    "typer>=0.23.0",
+    "typer>=0.20.0",
 ]
 description     = "基于 copier 的通用 Python 项目模板，通过 coopie CLI 或 copier copy 一键生成开箱即用的工程骨架。"
 license         = "MIT"
 name            = "coopie"
 readme          = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 version         = "0.8.1"
 
 [project.scripts]
@@ -115,7 +115,7 @@ select = [
 preset           = "strict"
 project-excludes = [".venv/**", "template/**", "docs/_build/**"]
 project-includes = ["**/*.ipynb", "**/*.py*"]
-python-version   = "3.9"
+python-version   = "3.8"
 search-path      = ["."]
 
 # bump-my-version 配置 - 用于管理模板版本号（copier 通过 git tag 识别模板版本）

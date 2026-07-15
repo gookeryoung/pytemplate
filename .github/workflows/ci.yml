@@ -81,6 +81,12 @@ jobs:
           test -d .preview/out/src
           test -d .preview/out/tests
           test -f .preview/out/.copier-answers.yml
+          test -f .preview/out/ruff.toml
+          test -f .preview/out/pytest.ini
+          test -f .preview/out/.coveragerc
+          test -f .preview/out/pyrefly.toml
+          test -f .preview/out/.bumpversion.toml
+          test -f .preview/out/uv.toml
 
       - name: Verify Python syntax (rendered pyproject.toml)
         run: |
