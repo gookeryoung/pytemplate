@@ -206,10 +206,15 @@ select = [
 
 ```ini
 [pytest]
+addopts = -ra --strict-markers --strict-config
 asyncio_default_fixture_loop_scope = function
-markers = slow: marks tests as slow (deselect with '-m "not slow"')
+markers =
+    slow: marks tests as slow (deselect with '-m "not slow"')
+    gui: marks tests requiring Qt/GUI (deselect with '-m "not gui"')
 testpaths = tests
 ```
+
+> 标记注册与 `--strict-markers` 详细说明见 `python-testing` SKILL「标记注册」章节。
 
 ### .coveragerc 示例
 
@@ -229,6 +234,8 @@ exclude_lines =
     raise NotImplementedError
 show_missing = true
 ```
+
+> 覆盖率排除规则与 `# pragma: no cover` 详细说明见 `python-testing` SKILL「覆盖率」章节。
 
 ### pyrefly.toml 示例
 
@@ -341,9 +348,12 @@ tests/
 │   ├── __init__.py
 │   ├── conftest.py       # 单元测试专用 fixture
 │   └── test_models.py
-├── integration/          # 集成测试（慢、跨模块）
+├── integration/          # 集成测试（慢、跨模块，标 @pytest.mark.slow）
 │   ├── __init__.py
 │   └── test_workflow.py
+├── gui/                  # GUI 测试（仅 GUI 项目，标 @pytest.mark.gui）
+│   ├── __init__.py
+│   └── test_main_window.py
 └── fixtures/             # 测试数据（JSON/CSV/二进制）
     └── sample.json
 ```
@@ -376,12 +386,11 @@ def sample_data_path() -> Path:
 
 要点：
 - **`conftest.py` 自动发现**：pytest 自动加载同目录与父目录的 conftest，无需 import。
-- **fixture 优先级**：`tmp_path`/`monkeypatch`/`capsys`（pytest 内置） > 根 conftest > 子目录 conftest。
-- **scope 选择**：`function`（默认，隔离安全）> `module`（同模块共享）> `session`（全局共享，仅只读数据）。
 - **`tests/__init__.py` 可选**：加上后 tests 成为包，便于跨测试模块 import fixture；不加则 pytest 用 rootdir 模式发现。
 - **`fixtures/` 目录放测试数据**：JSON/CSV/二进制文件，通过 `Path(__file__).parent / "fixtures"` 引用。
-- **测试命名 `test_<对象>_<场景>`**：`test_user_create_with_valid_email`、`test_config_load_missing_file_raises`。
 - **测试覆盖 `src/` 全部公共 API**：覆盖率 ≥ 95%（rule-11 测试要求）。
+
+> fixture 模式、scope 选择、参数化、Mock 策略、GUI 测试（pytest-qt）等详细测试模式见 `python-testing` SKILL。
 
 ## 文档目录组织
 
